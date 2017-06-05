@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>test</title>
+    <style>
+        .test {
+            background: green;
+        }
+    </style>
+</head>
+<body>
+<transition show="isShow">
+    <div>测试</div>    
+</transition>
+<a href="javascript:;" onclick="test()">按钮</a>
+<script src="./transition.js"></script>
+<script>
+var transition = new Transition();
+console.log(transition)
+var state = transition.state;
+var test = function () {
+    console.log(state.isShow)
+    var isShow = !state.isShow;
+    transition.setState(state, { isShow: isShow })
+}
+
+</script>
+</body>
+</html>
