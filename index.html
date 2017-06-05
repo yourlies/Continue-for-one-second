@@ -18,6 +18,18 @@
 var transition = new Transition();
 console.log(transition)
 var state = transition.state;
+
+var fade = {
+    opacity: 0,
+    transition: 'opacity 1s ease-in-out'
+}
+var appear = {
+    opacity: 1,
+    transition: 'opacity 1s ease-in-out'
+}
+
+transition.cssAnimation({ fade: fade, appear: appear });
+
 var test = function () {
     console.log(state.isShow)
     var isShow = !state.isShow;
