@@ -21,14 +21,15 @@ var state = transition.state;
 
 var fade = {
     opacity: 0,
-    transition: 'opacity 1s ease-in-out'
+}
+var show = {
+    opacity: 1,
 }
 var appear = {
-    opacity: 1,
     transition: 'opacity 1s ease-in-out'
 }
 
-transition.cssAnimation({ fade: fade, appear: appear });
+transition.cssAnimation({ fade: fade, appear: appear, show: show });
 
 var test = function () {
     console.log(state.isShow)

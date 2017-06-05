@@ -1,5 +1,4 @@
 var Transition = (function() {
-
     var el = document.getElementsByTagName('transition');
     var elClone = el.item(0);
     var elReplace = document.createElement('div');
@@ -12,6 +11,8 @@ var Transition = (function() {
 
     var _Transition = function () {
         this.state = {};
+        this.tasks = [];
+        this.tasksLength = 0;
     };
 
     _Transition.prototype.cssParser = function (css) {
@@ -49,9 +50,31 @@ var Transition = (function() {
     }
 
     _Transition.prototype.updateClass = function (className) {
-        var index = this.classes.arr = [className];
+        var index = this.classes.arr = [className, _transition.cssSelector[1].key];
         this.classes.obj[className] = index;
         this.classNode.value = this.classes.arr.join(' ');
+    }
+
+    _Transition.prototype.tasksQueue = function (className) {
+        this.tasksLength++;
+        this.updateClass(className);
+        var _this = this;
+        var task = function () {
+            return new Promise (function (resolve) {
+                setTimeout(function () {
+                    resolve();
+                    _this.tasksLength--;
+                }, 1000)
+            })
+        };
+        this.tasks.push(task());
+        Promise.all(this.tasks).then(function () {
+            if (_this.tasksLength == 0) {
+                className == 'CFOSTransition-fade'
+                    ? elReplace.style.display = 'none'
+                    : elReplace.style.display = 'block';
+            }
+        });
     }
 
     _Transition.prototype.bindVariableListener = function (watch) {
@@ -68,8 +91,8 @@ var Transition = (function() {
         variable: variableShow,
         func: function (val) {
             elReplace.style.display = val
-            ? _transition.updateClass(_transition.cssSelector[1].key)
-            : _transition.updateClass(_transition.cssSelector[0].key);
+            ? _transition.tasksQueue(_transition.cssSelector[2].key)
+            : _transition.tasksQueue(_transition.cssSelector[0].key);
         }
     }
 
@@ -85,7 +108,6 @@ var Transition = (function() {
         _transition.cssSetter();
         _transition.cssRender();
         var cssSelector = _transition.cssSelector;
-        
     }
     
     Transition.prototype.setState = function (object, changes) {
