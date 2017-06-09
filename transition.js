@@ -1,6 +1,7 @@
 var Transition = (function() {
     var _Transition = function (el) {
         this.el = el;
+        this.tick = 0;
 
         this.state = {};
         this.tasks = []; this.tasksCount = 0;
@@ -108,6 +109,10 @@ var Transition = (function() {
         return {
             variable: `${variableShow}-transitionClass`,
             setter: function (val) {
+                var tick = val.appear.transition.match(/([0-9])([a-z]+)[ ]/);
+                if (tick[2] == 's') {
+                    _transition.tick = tick[1] * 1000;
+                }
                 _transition.classesCreator(val);
                 _transition.classesSorter();
                 _transition.classesRender();
@@ -152,7 +157,7 @@ var Transition = (function() {
                                 ? 'none'
                                 : 'block';
                         }
-                    }, 1000);
+                    }, _transition.tick);
                 });
             }
         }
