@@ -10,15 +10,21 @@
 </head>
 <body>
 <transition show="isShow">
-    <div>测试</div>    
+    <div>测试</div>
 </transition>
+<div>
+    干扰
+    <transition show="isShowing">
+        <a>嘿嘿嘿</a>
+    </transition>
+    <transition show="showing">
+        <a>啪啪啪</a>
+    </transition>
+</div>
 <a href="javascript:;" onclick="test()">按钮</a>
 <script src="./transition.js"></script>
 <script>
 var transition = new Transition();
-console.log(transition)
-var state = transition.state;
-
 var fade = {
     opacity: 0,
 }
@@ -30,11 +36,10 @@ var appear = {
 }
 
 transition.cssAnimation({ fade: fade, appear: appear, show: show });
-
 var test = function () {
-    console.log(state.isShow)
-    var isShow = !state.isShow;
-    transition.setState(state, { isShow: isShow })
+    var isShow = transition.state.isShow;
+    console.log(isShow)
+    transition.setState({ isShow: !isShow })
 }
 
 </script>

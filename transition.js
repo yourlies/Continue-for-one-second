@@ -1,15 +1,7 @@
 var Transition = (function() {
-    var el = document.getElementsByTagName('transition');
-    var elClone = el.item(0);
-    var elReplace = document.createElement('div');
-    elReplace.innerHTML = elClone.innerHTML;
-    var transitionId = document.createAttribute('transition-id');
-    transitionId.value = 1;
-    elReplace.setAttributeNode(transitionId);
-    el.item(0).parentNode.replaceChild(elReplace, el.item(0).parentNode.childNodes[1]);
-    var variableShow = elClone.getAttribute('show');
+    var _Transition = function (el) {
+        this.el = el;
 
-    var _Transition = function () {
         this.state = {};
         this.tasks = []; this.tasksCount = 0;
 
@@ -23,7 +15,7 @@ var Transition = (function() {
         };
 
         this.classNode = document.createAttribute('class');
-        elReplace.setAttributeNode(this.classNode);
+        this.el.setAttributeNode(this.classNode);
         this.styleNode = document.createElement('style');
         document.head.appendChild(this.styleNode)
 
@@ -97,73 +89,117 @@ var Transition = (function() {
         });
     }
 
-    _Transition.prototype.bindVariableListener = function (watch) {
-        Object.defineProperty(this.state, watch.variable, {
-            set: function (val) {
-                watch.func(val);
+    _Transition.prototype.bindVariableListener = function (state, watch) {
+        var descriptor = {};
+        if (watch.getter) {
+            descriptor.get = function () {
+                watch.getter();
             }
-        })
+        }
+        if (watch.setter) {
+            descriptor.set = function (val) {
+                watch.setter(val);
+            }
+        }
+        Object.defineProperty(state, watch.variable, descriptor);
     }
 
-    var _transition = new _Transition();
-
-    var showListener = {
-        variable: variableShow,
-        func: function (val) {
-            var fadeIndex = _transition.sortedClasses.classesRawKeyToIndex['fade'];
-            var showIndex = _transition.sortedClasses.classesRawKeyToIndex['show'];
-            var appearIndex = _transition.sortedClasses.classesRawKeyToIndex['appear'];
-            var fadeClass = _transition.sortedClasses.classesIndexToKey[fadeIndex];
-            var showClass = _transition.sortedClasses.classesIndexToKey[showIndex];
-            var appearClass = _transition.sortedClasses.classesIndexToKey[appearIndex];
-
-            var fade = function (_, resolve) {
-                _transition.insertClass(appearClass);
-                _transition.removeClass(showClass);
-                _transition.insertClass(fadeClass);
-                resolve();
-
-            };
-            var show = function (_, resolve) {
-                _transition.insertClass(appearClass);
-                _transition.insertClass(showClass);
-                _transition.removeClass(fadeClass);
-                resolve();
+    var classesListener = function (_transition, variableShow) {
+        return {
+            variable: `${variableShow}-transitionClass`,
+            setter: function (val) {
+                _transition.classesCreator(val);
+                _transition.classesSorter();
+                _transition.classesRender();
             }
-
-            var task = elReplace.style.display = val
-                ? _transition.taskCreator(show)
-                : _transition.taskCreator(fade);
-
-            _transition.tasksQueue(task, function (transition) {
-                setTimeout(function () {
-                    transition.tasksCount--;
-                    if (transition.tasksCount == 0) {
-                        elReplace.style.display = val
-                            ? 'block'
-                            : 'none';
-                    }
-                }, 1000);
-            });
         }
     }
 
-    _transition.bindVariableListener(showListener);
+    var showListener = function (_transition, el, variableShow) {
+        return {
+            variable: variableShow,
+            setter: function (val) {
+                var fadeIndex = _transition.sortedClasses.classesRawKeyToIndex['fade'];
+                var showIndex = _transition.sortedClasses.classesRawKeyToIndex['show'];
+                var appearIndex = _transition.sortedClasses.classesRawKeyToIndex['appear'];
+                var fadeClass = _transition.sortedClasses.classesIndexToKey[fadeIndex];
+                var showClass = _transition.sortedClasses.classesIndexToKey[showIndex];
+                var appearClass = _transition.sortedClasses.classesIndexToKey[appearIndex];
+
+                var fade = function (_, resolve) {
+                    _transition.insertClass(appearClass);
+                    _transition.removeClass(showClass);
+                    _transition.insertClass(fadeClass);
+                    resolve();
+
+                };
+                var show = function (_, resolve) {
+                    _transition.insertClass(appearClass);
+                    _transition.insertClass(showClass);
+                    _transition.removeClass(fadeClass);
+                    resolve();
+                }
+
+                var task = el.style.display = val
+                    ? _transition.taskCreator(show)
+                    : _transition.taskCreator(fade);
+
+                _transition.tasksQueue(task, function (transition) {
+                    setTimeout(function () {
+                        transition.tasksCount--;
+                        if (transition.tasksCount == 0) {
+                            el.style.display = val
+                                ? 'block'
+                                : 'none';
+                        }
+                    }, 1000);
+                });
+            }
+        }
+    }
+
+    var createReplaceTransitionEl = function (_this, state, el) {
+        var elClone = el;
+        var elReplace = document.createElement('div');
+        elReplace.innerHTML = elClone.innerHTML;
+        var transitionId = document.createAttribute('transition-id');
+        transitionId.value = 1;
+        elReplace.setAttributeNode(transitionId);
+        el.parentNode.replaceChild(elReplace, el);
+        var variableShow = elClone.getAttribute('show');
+        state[variableShow] = false;
+        state[`${variableShow}-transitionClass`] = false;
+        _this.state[variableShow] = false;
+        return { elReplace: elReplace, variableShow: variableShow };
+    }
+
+    var bindTransitionEl = function (_this, state) {
+        var el = document.getElementsByTagName('transition');
+        while (el.length > 0) {
+            var elInfo = createReplaceTransitionEl(_this, state, el[0]);
+            var _transition = new _Transition(elInfo.elReplace);
+            var listener = showListener(_transition, elInfo.elReplace, elInfo.variableShow);
+            _transition.bindVariableListener(state, listener);
+            _transition.bindVariableListener(state, classesListener(_transition, elInfo.variableShow));
+        }
+    }
+
+    const state = {};
 
     var Transition = function () {
         this.state = {};
-        this.state[variableShow] = true;
+        bindTransitionEl(this, state);
     }
 
-    Transition.prototype.cssAnimation = function (css) {
-        _transition.classesCreator(css);
-        _transition.classesSorter();
-        _transition.classesRender();
+    Transition.prototype.cssAnimation = function (classes) {
+        state[`isShow-transitionClass`] = classes;
     }
     
-    Transition.prototype.setState = function (object, changes) {
-        object[variableShow] = changes.isShow;
-        _transition.state[variableShow] = changes.isShow;
+    Transition.prototype.setState = function (changes) {
+        for (var key in changes) {
+            this.state[key] = changes[key];
+            state[key] = changes[key];
+        }
     }
 
     return Transition;
