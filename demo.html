@@ -35,10 +35,9 @@ var appear = {
     transition: 'opacity 1s ease-in-out'
 }
 
-transition.cssAnimation({ fade: fade, appear: appear, show: show });
+transition.cssAnimation({ fade: fade, appear: appear, show: show }, 'isShow');
 var test = function () {
     var isShow = transition.state.isShow;
-    console.log(isShow)
     transition.setState({ isShow: !isShow })
 }
 

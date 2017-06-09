@@ -141,16 +141,16 @@ var Transition = (function() {
                 }
 
                 var task = el.style.display = val
-                    ? _transition.taskCreator(show)
-                    : _transition.taskCreator(fade);
+                    ? _transition.taskCreator(fade)
+                    : _transition.taskCreator(show);
 
                 _transition.tasksQueue(task, function (transition) {
                     setTimeout(function () {
                         transition.tasksCount--;
                         if (transition.tasksCount == 0) {
                             el.style.display = val
-                                ? 'block'
-                                : 'none';
+                                ? 'none'
+                                : 'block';
                         }
                     }, 1000);
                 });
@@ -191,8 +191,8 @@ var Transition = (function() {
         bindTransitionEl(this, state);
     }
 
-    Transition.prototype.cssAnimation = function (classes) {
-        state[`isShow-transitionClass`] = classes;
+    Transition.prototype.cssAnimation = function (classes, variableShow) {
+        state[`${variableShow}-transitionClass`] = classes;
     }
     
     Transition.prototype.setState = function (changes) {
